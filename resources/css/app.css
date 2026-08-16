@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --ab-teal: #0f766e;
+        --ab-rose: #e11d48;
+        --ab-mint: #ccfbf1;
+        --ab-peach: #ffedd5;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+}
+
+@layer utilities {
+    .font-afriboost {
+        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .bg-afriboost {
+        background:
+            radial-gradient(circle at top left, rgba(204, 251, 241, 0.9), transparent 40%),
+            radial-gradient(circle at top right, rgba(255, 237, 213, 0.85), transparent 35%),
+            linear-gradient(180deg, #f0fdfa 0%, #fff7ed 45%, #f0fdfa 100%);
+    }
+}

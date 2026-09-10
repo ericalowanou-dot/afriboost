@@ -89,8 +89,8 @@
                     <th class="px-4 py-3">WhatsApp</th>
                     <th class="px-4 py-3">Vérification</th>
                     <th class="px-4 py-3">Classement</th>
+                    <th class="px-4 py-3">Réseaux</th>
                     <th class="px-4 py-3">Participations</th>
-                    <th class="px-4 py-3">Statut</th>
                     <th class="px-4 py-3">Actions</th>
                 </tr>
             </thead>
@@ -109,12 +109,27 @@
                             </span>
                         </td>
                         <td class="px-4 py-3">{{ $creator->creatorTierLabel() }}</td>
+                        <td class="px-4 py-3 text-xs text-slate-500">
+                            {{ $creator->socialNetworks->map->platformLabel()->implode(', ') ?: '—' }}
+                        </td>
                         <td class="px-4 py-3">{{ $creator->participations_count }}</td>
-                        <td class="px-4 py-3">{{ $creator->status }}</td>
                         <td class="px-4 py-3">
+                            <x-admin.verification-modals
+                                :prefix="'creator-'.$creator->id"
+                                :view-links="$creator->adminViewLinks()"
+                                :tier-networks="$creator->adminTierNetworks()"
+                                :tier-action="route('admin.creators.networks.tier', $creator)"
+                                :verify-action="route('admin.creators.verify', $creator)"
+                                :reject-action="route('admin.creators.reject', $creator)"
+                                verify-label="Vérifier le compte"
+                                reject-label="Refuser le compte"
+                                reject-field="status_reason"
+                                reject-placeholder="Motif du refus du compte"
+                                :can-decide="$creator->verification_status === 'pending'"
+                            />
                             <a href="{{ route('admin.creators.show', $creator) }}"
-                               class="inline-flex rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-bold text-white">
-                                Voir / Vérifier
+                               class="mt-1 inline-flex text-xs font-semibold text-teal-700 hover:underline">
+                                Fiche complète
                             </a>
                         </td>
                     </tr>

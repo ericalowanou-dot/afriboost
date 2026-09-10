@@ -68,6 +68,7 @@ Route::middleware(['auth', 'active', 'registration.complete'])->group(function (
         Route::post('/createurs/{creator}/verifier', [AdminCreatorController::class, 'verify'])->name('creators.verify');
         Route::post('/createurs/{creator}/refuser', [AdminCreatorController::class, 'rejectVerification'])->name('creators.reject');
         Route::patch('/createurs/{creator}/classement', [AdminCreatorController::class, 'updateTier'])->name('creators.tier');
+        Route::patch('/createurs/{creator}/reseaux/classement', [AdminCreatorController::class, 'updateNetworksTier'])->name('creators.networks.tier');
         Route::patch('/createurs/{creator}/reseaux/{network}', [AdminCreatorController::class, 'updateNetwork'])->name('creators.networks.update');
     });
 });

@@ -144,7 +144,7 @@ class Mission extends Model
     public function rewardFor(?User $user, ?string $network = null): float
     {
         $network ??= $this->social_network;
-        $tier = match ($user?->creator_tier) {
+        $tier = match ($user?->tierForPlatform($network)) {
             User::TIER_TOP => 'top',
             User::TIER_MEDIUM => 'medium',
             default => 'basic',

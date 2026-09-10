@@ -82,4 +82,53 @@ class Participation extends Model
             default => 'bg-slate-100 text-slate-700',
         };
     }
+
+    public function isPendingReview(): bool
+    {
+        return in_array($this->status, [self::STATUS_SUBMITTED, self::STATUS_UNDER_REVIEW], true);
+    }
+
+    /** @return list<array{label: string, url: ?string, meta: ?string}> */
+    public function adminViewLinks(): array
+    {
+        $links = [];
+
+        if ($this->content_url) {
+            $links[] = [
+                'label' => 'Contenu soumis',
+                'url' => $this->content_url,
+                'meta' => $this->mission?->networkLabel().' · '.$this->mission?->brand_name,
+            ];
+        }
+
+        $links[] = [
+            'label' => 'Fiche créateur',
+            'url' => route('admin.creators.show', $this->user_id),
+            'meta' => $this->user?->name,
+        ];
+
+        foreach ($this->user?->socialNetworks ?? [] as $network) {
+            if ($network->profile_url) {
+                $links[] = $network->adminViewLink();
+            }
+        }
+
+        return $links;
+    }
+
+    /** @return list<array{id: int, label: string, handle: ?string, tier: ?string}> */
+    public function adminTierNetworks(): array
+    {
+        $networks = $this->user?->socialNetworks ?? collect();
+        $missionNetwork = $this->mission?->social_network;
+
+        if ($missionNetwork) {
+            $networks = $networks->sortByDesc(fn (SocialNetwork $network) => $network->platform === $missionNetwork);
+        }
+
+        return $networks
+            ->map(fn (SocialNetwork $network) => $network->adminTierData())
+            ->values()
+            ->all();
+    }
 }

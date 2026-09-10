@@ -102,6 +102,56 @@ class User extends Authenticatable
         };
     }
 
+    public function tierForPlatform(?string $platform): ?string
+    {
+        if (! $platform) {
+            return $this->creator_tier;
+        }
+
+        $networkTier = $this->relationLoaded('socialNetworks')
+            ? $this->socialNetworks->firstWhere('platform', $platform)?->creator_tier
+            : $this->socialNetworks()->where('platform', $platform)->value('creator_tier');
+
+        return $networkTier ?? $this->creator_tier;
+    }
+
+    /** @return list<array{label: string, url: ?string, meta: ?string}> */
+    public function adminViewLinks(): array
+    {
+        return $this->socialNetworks
+            ->filter(fn (SocialNetwork $network) => filled($network->profile_url))
+            ->map(fn (SocialNetwork $network) => $network->adminViewLink())
+            ->values()
+            ->all();
+    }
+
+    /** @return list<array{id: int, label: string, handle: ?string, tier: ?string}> */
+    public function adminTierNetworks(): array
+    {
+        return $this->socialNetworks
+            ->map(fn (SocialNetwork $network) => $network->adminTierData())
+            ->values()
+            ->all();
+    }
+
+    public function syncCreatorTierFromNetworks(): void
+    {
+        $tiers = $this->socialNetworks()
+            ->whereNotNull('creator_tier')
+            ->pluck('creator_tier');
+
+        if ($tiers->isEmpty()) {
+            return;
+        }
+
+        $priority = [self::TIER_TOP => 3, self::TIER_MEDIUM => 2, self::TIER_BASIC => 1];
+        $best = $tiers->sortByDesc(fn (string $tier) => $priority[$tier] ?? 0)->first();
+
+        if ($best && $this->creator_tier !== $best) {
+            $this->update(['creator_tier' => $best]);
+        }
+    }
+
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(self::class, 'verified_by');

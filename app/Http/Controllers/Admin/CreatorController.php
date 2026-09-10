@@ -23,7 +23,7 @@ class CreatorController extends Controller
 
         $creators = User::query()
             ->where('role', 'creator')
-            ->with('wallet')
+            ->with(['wallet', 'socialNetworks'])
             ->withCount('participations')
             ->when($filters['verification'] === 'pending', fn ($q) => $q->where('verification_status', User::VERIFICATION_PENDING))
             ->when($filters['verification'] === 'verified', fn ($q) => $q->where('verification_status', User::VERIFICATION_VERIFIED))
@@ -134,10 +134,35 @@ class CreatorController extends Controller
         $data = $request->validate([
             'follower_count' => ['nullable', 'integer', 'min:0'],
             'handle' => ['nullable', 'string', 'max:100'],
+            'creator_tier' => ['nullable', 'in:top,medium,basic'],
         ]);
 
         $network->update($data);
+        $creator->syncCreatorTierFromNetworks();
 
         return back()->with('success', 'Réseau social mis à jour.');
+    }
+
+    public function updateNetworksTier(Request $request, User $creator)
+    {
+        abort_unless($creator->isCreator(), 404);
+
+        $data = $request->validate([
+            'networks' => ['required', 'array'],
+            'networks.*.creator_tier' => ['nullable', 'in:top,medium,basic'],
+        ]);
+
+        foreach ($data['networks'] as $networkId => $payload) {
+            $network = $creator->socialNetworks()->whereKey($networkId)->first();
+            if ($network) {
+                $network->update([
+                    'creator_tier' => $payload['creator_tier'] ?: null,
+                ]);
+            }
+        }
+
+        $creator->syncCreatorTierFromNetworks();
+
+        return back()->with('success', 'Classement des comptes enregistré.');
     }
 }

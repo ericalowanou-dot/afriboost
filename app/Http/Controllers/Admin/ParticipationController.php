@@ -16,7 +16,7 @@ class ParticipationController extends Controller
     {
         $status = $request->string('status')->toString() ?: 'queue';
 
-        $query = Participation::with(['user', 'mission'])->latest('submitted_at');
+        $query = Participation::with(['user.socialNetworks', 'mission'])->latest('submitted_at');
 
         if ($status === 'queue') {
             $query->whereIn('status', [

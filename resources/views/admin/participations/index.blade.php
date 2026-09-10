@@ -51,9 +51,12 @@
                         <td class="px-4 py-3">
                             <x-admin.verification-modals
                                 :prefix="'participation-'.$participation->id"
+                                :creator-id="$participation->user_id"
                                 :view-links="$participation->adminViewLinks()"
                                 :tier-networks="$participation->adminTierNetworks()"
                                 :tier-action="route('admin.creators.networks.tier', $participation->user_id)"
+                                :global-tier="$participation->user->creator_tier"
+                                :global-tier-action="route('admin.creators.tier', $participation->user_id)"
                                 :verify-action="route('admin.participations.validate', $participation)"
                                 :reject-action="route('admin.participations.reject', $participation)"
                                 verify-label="Valider et créditer"

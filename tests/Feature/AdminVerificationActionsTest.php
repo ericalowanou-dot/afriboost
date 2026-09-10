@@ -24,7 +24,7 @@ class AdminVerificationActionsTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_classify_each_creator_network(): void
+    public function test_admin_can_classify_each_creator_network_via_json(): void
     {
         $creator = User::factory()->create(['role' => 'creator', 'registration_step' => 2]);
         $tiktok = $creator->socialNetworks()->create([
@@ -40,20 +40,24 @@ class AdminVerificationActionsTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->actingAs($this->admin)->patch(route('admin.creators.networks.tier', $creator), [
-            'networks' => [
-                $tiktok->id => ['creator_tier' => 'top'],
-                $instagram->id => ['creator_tier' => 'basic'],
-            ],
-        ]);
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.creators.networks.tier', $creator), [
+                'networks' => [
+                    $tiktok->id => ['creator_tier' => 'top'],
+                    $instagram->id => ['creator_tier' => 'basic'],
+                ],
+            ]);
 
-        $response->assertRedirect();
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('creatorTierLabel', 'Top');
+
         $this->assertSame('top', $tiktok->fresh()->creator_tier);
         $this->assertSame('basic', $instagram->fresh()->creator_tier);
         $this->assertSame('top', $creator->fresh()->creator_tier);
     }
 
-    public function test_admin_creators_index_shows_verification_action_buttons(): void
+    public function test_admin_creators_index_shows_tier_dropdown_for_single_network(): void
     {
         $creator = User::factory()->create([
             'role' => 'creator',
@@ -70,13 +74,43 @@ class AdminVerificationActionsTest extends TestCase
             ->get(route('admin.creators.index', ['verification' => 'pending']))
             ->assertOk()
             ->assertSee('Voir')
-            ->assertSee('Classer')
+            ->assertSee('Non classé')
             ->assertSee('Décider');
+    }
+
+    public function test_admin_creators_index_shows_classer_button_for_multiple_networks(): void
+    {
+        $creator = User::factory()->create([
+            'role' => 'creator',
+            'verification_status' => User::VERIFICATION_VERIFIED,
+            'registration_step' => 2,
+        ]);
+        $creator->socialNetworks()->create([
+            'platform' => 'tiktok',
+            'profile_url' => 'https://tiktok.com/@demo',
+            'status' => 'active',
+        ]);
+        $creator->socialNetworks()->create([
+            'platform' => 'instagram',
+            'profile_url' => 'https://instagram.com/demo',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.creators.index'))
+            ->assertOk()
+            ->assertSee('Classer')
+            ->assertSee('Voir');
     }
 
     public function test_admin_participations_index_shows_verification_action_buttons(): void
     {
         $creator = User::factory()->create(['role' => 'creator', 'registration_step' => 2]);
+        $creator->socialNetworks()->create([
+            'platform' => 'tiktok',
+            'profile_url' => 'https://tiktok.com/@demo',
+            'status' => 'active',
+        ]);
         $mission = Mission::create([
             'brand_name' => 'Brand',
             'title' => 'Mission',
@@ -100,7 +134,7 @@ class AdminVerificationActionsTest extends TestCase
             ->get(route('admin.participations.index'))
             ->assertOk()
             ->assertSee('Voir')
-            ->assertSee('Classer')
+            ->assertSee('Non classé')
             ->assertSee('Décider');
     }
 }

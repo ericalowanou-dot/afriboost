@@ -121,7 +121,11 @@ class CreatorController extends Controller
             'creator_tier' => ['nullable', 'in:top,medium,basic'],
         ]);
 
-        $creator->update(['creator_tier' => $data['creator_tier']]);
+        $creator->update(['creator_tier' => $data['creator_tier'] ?: null]);
+
+        if ($request->wantsJson()) {
+            return response()->json($this->tierResponse($creator));
+        }
 
         return back()->with('success', 'Classement du créateur mis à jour.');
     }
@@ -163,6 +167,28 @@ class CreatorController extends Controller
 
         $creator->syncCreatorTierFromNetworks();
 
+        if ($request->wantsJson()) {
+            return response()->json($this->tierResponse($creator->fresh(), 'Classement des comptes enregistré.'));
+        }
+
         return back()->with('success', 'Classement des comptes enregistré.');
+    }
+
+    /** @return array<string, mixed> */
+    private function tierResponse(User $creator, string $message = 'Classement enregistré.'): array
+    {
+        $creator->load('socialNetworks');
+
+        return [
+            'success' => true,
+            'message' => $message,
+            'creatorId' => $creator->id,
+            'creatorTierLabel' => $creator->creatorTierLabel(),
+            'networks' => $creator->socialNetworks->map(fn (SocialNetwork $network) => [
+                'id' => $network->id,
+                'tier' => $network->creator_tier,
+                'tierLabel' => $network->tierLabel(),
+            ])->values(),
+        ];
     }
 }

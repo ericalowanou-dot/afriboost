@@ -9,9 +9,12 @@
 
         <x-admin.verification-modals
             :prefix="'creator-show-'.$creator->id"
+            :creator-id="$creator->id"
             :view-links="$creator->adminViewLinks()"
             :tier-networks="$creator->adminTierNetworks()"
             :tier-action="route('admin.creators.networks.tier', $creator)"
+            :global-tier="$creator->creator_tier"
+            :global-tier-action="route('admin.creators.tier', $creator)"
             :verify-action="route('admin.creators.verify', $creator)"
             :reject-action="route('admin.creators.reject', $creator)"
             verify-label="Vérifier le compte"

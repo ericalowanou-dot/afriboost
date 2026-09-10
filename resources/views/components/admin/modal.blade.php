@@ -2,6 +2,7 @@
 
 <div x-data="{ open: false }"
      x-on:open-modal.window="if ($event.detail === '{{ $name }}') open = true"
+     x-on:close-modal.window="if ($event.detail === '{{ $name }}') open = false"
      x-show="open"
      x-cloak
      class="fixed inset-0 z-50 flex items-center justify-center p-4"

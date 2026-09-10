@@ -2,6 +2,9 @@
     'viewLinks' => [],
     'tierNetworks' => [],
     'tierAction' => '',
+    'globalTier' => null,
+    'globalTierAction' => '',
+    'creatorId' => null,
     'verifyAction' => '',
     'rejectAction' => '',
     'verifyLabel' => 'Valider',
@@ -17,7 +20,7 @@
     $singleViewLink = count($viewLinks) === 1 ? ($viewLinks[0]['url'] ?? null) : null;
 @endphp
 
-<div {{ $attributes->merge(['class' => 'flex flex-wrap gap-1.5']) }}>
+<div {{ $attributes->merge(['class' => 'flex flex-wrap items-center gap-1.5']) }}>
     @if ($singleViewLink)
         <a href="{{ $singleViewLink }}" target="_blank" rel="noopener"
            class="inline-flex rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-800">
@@ -34,15 +37,15 @@
         <span class="inline-flex rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-400">Voir</span>
     @endif
 
-    @if (count($tierNetworks) > 0)
-        <button type="button"
-                x-data
-                @click="$dispatch('open-modal', '{{ $uid }}-tier')"
-                class="inline-flex rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-900">
-            Classer
-        </button>
-    @else
-        <span class="inline-flex rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-400">Classer</span>
+    @if ($tierAction || $globalTierAction)
+        <x-admin.tier-classifier
+            :networks="$tierNetworks"
+            :action="$tierAction"
+            :global-tier="$globalTier"
+            :global-action="$globalTierAction"
+            :creator-id="$creatorId"
+            :prefix="$uid.'-tier'"
+        />
     @endif
 
     @if ($canDecide)
@@ -78,33 +81,6 @@
                 </li>
             @endforeach
         </ul>
-    </x-admin.modal>
-@endif
-
-@if (count($tierNetworks) > 0)
-    <x-admin.modal :name="$uid.'-tier'" title="Classer les comptes">
-        <form method="POST" action="{{ $tierAction }}" class="space-y-4">
-            @csrf
-            @method('PATCH')
-            @foreach ($tierNetworks as $network)
-                <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 p-3">
-                    <div>
-                        <p class="font-bold">{{ $network['label'] }}</p>
-                        <p class="text-xs text-slate-500">{{ $network['handle'] ?? '—' }}</p>
-                    </div>
-                    <select name="networks[{{ $network['id'] }}][creator_tier]"
-                            class="rounded-xl border-slate-200 text-sm">
-                        <option value="">Non classé</option>
-                        @foreach (['top' => 'Top', 'medium' => 'Medium', 'basic' => 'Basique'] as $value => $label)
-                            <option value="{{ $value }}" @selected(($network['tier'] ?? '') === $value)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            @endforeach
-            <button type="submit" class="w-full rounded-xl bg-slate-900 py-2.5 text-sm font-bold text-white">
-                Enregistrer le classement
-            </button>
-        </form>
     </x-admin.modal>
 @endif
 

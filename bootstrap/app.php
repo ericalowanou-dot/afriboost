@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
             'registration.complete' => \App\Http\Middleware\EnsureRegistrationComplete::class,
         ]);
+        
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

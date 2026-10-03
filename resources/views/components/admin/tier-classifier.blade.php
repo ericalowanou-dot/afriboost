@@ -87,7 +87,7 @@
         <select
             @change="saveSingle({{ $network['id'] }}, $event.target.value)"
             :disabled="saving"
-            class="min-w-[6.5rem] rounded-lg border-slate-200 bg-white py-1.5 pl-2 pr-7 text-xs font-semibold text-slate-700 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+            class="min-w-[6.5rem] rounded-lg border-slate-200 bg-white py-1.5 pl-2 pr-7 text-xs font-semibold text-slate-700 shadow-sm focus:border-brand-500 focus:ring-brand-500"
         >
             @foreach ($tierOptions as $value => $label)
                 <option value="{{ $value }}" @selected(($network['tier'] ?? '') === $value)>{{ $label }}</option>
@@ -146,7 +146,7 @@
         <select
             @change="saveGlobal($event.target.value)"
             :disabled="saving"
-            class="min-w-[6.5rem] rounded-lg border-slate-200 bg-white py-1.5 pl-2 pr-7 text-xs font-semibold text-slate-700 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+            class="min-w-[6.5rem] rounded-lg border-slate-200 bg-white py-1.5 pl-2 pr-7 text-xs font-semibold text-slate-700 shadow-sm focus:border-brand-500 focus:ring-brand-500"
         >
             @foreach ($tierOptions as $value => $label)
                 <option value="{{ $value }}" @selected($globalTier === $value)>{{ $label }}</option>

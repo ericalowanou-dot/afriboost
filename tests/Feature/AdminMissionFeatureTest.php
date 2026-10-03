@@ -48,7 +48,7 @@ class AdminMissionFeatureTest extends TestCase
             'content_example' => UploadedFile::fake()->image('example.jpg'),
         ]);
 
-        $response->assertRedirect(route('admin.missions.index'));
+        $response->assertRedirect(route('admin.missions.show', Mission::latest('id')->first()));
 
         $mission = Mission::first();
         $this->assertNotNull($mission);

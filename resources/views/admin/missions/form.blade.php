@@ -49,7 +49,7 @@
                 <select name="campaign_id" class="w-full rounded-xl border-slate-200">
                     <option value="">—</option>
                     @foreach ($campaigns as $campaign)
-                        <option value="{{ $campaign->id }}" @selected(old('campaign_id', $m->campaign_id ?? '') == $campaign->id)>{{ $campaign->title }}</option>
+                        <option value="{{ $campaign->id }}" @selected(old('campaign_id', $m->campaign_id ?? request('campaign_id')) == $campaign->id)>{{ $campaign->title }}</option>
                     @endforeach
                 </select>
             </div>
@@ -96,11 +96,11 @@
             <div class="flex flex-wrap gap-3">
                 @foreach ($networkLabels as $key => $label)
                     <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition"
-                           :class="isSelected('{{ $key }}') ? 'border-teal-600 bg-teal-50 text-teal-800' : 'border-slate-200 bg-white text-slate-600'">
+                           :class="isSelected('{{ $key }}') ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-slate-200 bg-white text-slate-600'">
                         <input type="checkbox"
                                name="social_networks[]"
                                value="{{ $key }}"
-                               class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                               class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                                :checked="isSelected('{{ $key }}')"
                                @change="toggleNetwork('{{ $key }}')">
                         {{ $label }}
@@ -228,7 +228,7 @@
     </div>
 
     <div class="flex gap-3">
-        <button type="submit" class="rounded-xl bg-rose-600 px-5 py-2.5 font-bold text-white">Enregistrer</button>
+        <button type="submit" class="rounded-xl bg-cta-600 px-5 py-2.5 font-bold text-white">Enregistrer</button>
         <a href="{{ route('admin.missions.index') }}" class="rounded-xl bg-slate-100 px-5 py-2.5 font-semibold text-slate-600">Annuler</a>
     </div>
 </form>

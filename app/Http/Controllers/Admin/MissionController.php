@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\Mission;
+use App\Models\Participation;
+use App\Models\Transaction;
+use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -23,6 +26,11 @@ class MissionController extends Controller
 
         $missions = Mission::query()
             ->with('campaign')
+            ->withCount([
+                'participations',
+                'participations as pending_count' => fn ($q) => $q->whereIn('status', [Participation::STATUS_SUBMITTED, Participation::STATUS_UNDER_REVIEW]),
+                'participations as validated_count' => fn ($q) => $q->whereIn('status', [Participation::STATUS_VALIDATED, Participation::STATUS_PAID]),
+            ])
             ->when($filters['network'] !== 'all', fn ($q) => $q->network($filters['network']))
             ->when($filters['status'] !== 'all', fn ($q) => $q->where('status', $filters['status']))
             ->when($filters['campaign_id'], fn ($q) => $q->where('campaign_id', $filters['campaign_id']))
@@ -44,6 +52,39 @@ class MissionController extends Controller
         $campaigns = Campaign::orderBy('title')->get();
 
         return view('admin.missions.index', compact('missions', 'filters', 'campaigns'));
+    }
+
+    /** Suivi d'une mission (cahier des charges §7). */
+    public function show(Mission $mission): View
+    {
+        $mission->load('campaign');
+
+        $byStatus = $mission->participations()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $stats = [
+            'participants' => $byStatus->sum(),
+            'submitted' => $byStatus->only([
+                Participation::STATUS_SUBMITTED, Participation::STATUS_UNDER_REVIEW,
+                Participation::STATUS_VALIDATED, Participation::STATUS_PAID, Participation::STATUS_REJECTED,
+            ])->sum(),
+            'pending' => $byStatus->only([Participation::STATUS_SUBMITTED, Participation::STATUS_UNDER_REVIEW])->sum(),
+            'validated' => $byStatus->only([Participation::STATUS_VALIDATED, Participation::STATUS_PAID])->sum(),
+            'rejected' => (int) ($byStatus[Participation::STATUS_REJECTED] ?? 0),
+            'rewards' => (float) Transaction::where('mission_id', $mission->id)
+                ->where('type', Transaction::TYPE_REWARD)
+                ->where('status', Transaction::STATUS_COMPLETED)
+                ->sum('amount_usd'),
+        ];
+
+        $participations = $mission->participations()
+            ->with(['user.socialNetworks', 'mission'])
+            ->latest('updated_at')
+            ->paginate(15);
+
+        return view('admin.missions.show', compact('mission', 'stats', 'participations'));
     }
 
     public function create(): View
@@ -68,9 +109,11 @@ class MissionController extends Controller
 
         unset($data['logo'], $data['content_example']);
 
-        Mission::create($data);
+        $mission = Mission::create($data);
 
-        return redirect()->route('admin.missions.index')->with('success', 'Mission créée.');
+        ActivityLogger::log('mission.created', 'Mission « '.$mission->title.' » créée.', $mission);
+
+        return redirect()->route('admin.missions.show', $mission)->with('success', 'Mission créée.');
     }
 
     public function edit(Mission $mission): View
@@ -107,7 +150,11 @@ class MissionController extends Controller
 
         $mission->update($data);
 
-        return redirect()->route('admin.missions.index')->with('success', 'Mission mise à jour.');
+        ActivityLogger::log('mission.updated', 'Mission « '.$mission->title.' » modifiée.', $mission, [
+            'changes' => array_keys($mission->getChanges()),
+        ]);
+
+        return redirect()->route('admin.missions.show', $mission)->with('success', 'Mission mise à jour.');
     }
 
     public function destroy(Mission $mission)
@@ -118,6 +165,10 @@ class MissionController extends Controller
         if ($mission->content_example_path) {
             Storage::disk('public')->delete($mission->content_example_path);
         }
+
+        ActivityLogger::log('mission.deleted', 'Mission « '.$mission->title.' » supprimée.', null, [
+            'mission_id' => $mission->id,
+        ]);
 
         $mission->delete();
 

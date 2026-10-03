@@ -10,8 +10,8 @@ class SocialProfileUrlParser
 
         return match (true) {
             str_contains($host, 'tiktok.com') => 'tiktok',
-            str_contains($host, 'instagram.com') => 'instagram',
-            str_contains($host, 'facebook.com'), str_contains($host, 'fb.com') => 'facebook',
+            str_contains($host, 'instagram.com'), str_contains($host, 'instagr.am') => 'instagram',
+            str_contains($host, 'facebook.com'), str_contains($host, 'fb.com'), str_contains($host, 'fb.watch') => 'facebook',
             str_contains($host, 'youtube.com'), str_contains($host, 'youtu.be') => 'youtube',
             default => null,
         };

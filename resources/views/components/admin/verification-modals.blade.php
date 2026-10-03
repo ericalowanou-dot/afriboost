@@ -23,14 +23,14 @@
 <div {{ $attributes->merge(['class' => 'flex flex-wrap items-center gap-1.5']) }}>
     @if ($singleViewLink)
         <a href="{{ $singleViewLink }}" target="_blank" rel="noopener"
-           class="inline-flex rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-800">
+           class="inline-flex rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-800">
             Voir
         </a>
     @elseif (count($viewLinks) > 0)
         <button type="button"
                 x-data
                 @click="$dispatch('open-modal', '{{ $uid }}-view')"
-                class="inline-flex rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-800">
+                class="inline-flex rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-800">
             Voir
         </button>
     @else
@@ -52,7 +52,7 @@
         <button type="button"
                 x-data
                 @click="$dispatch('open-modal', '{{ $uid }}-decision')"
-                class="inline-flex rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700">
+                class="inline-flex rounded-lg bg-cta-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-cta-700">
             Décider
         </button>
     @endif
@@ -69,12 +69,12 @@
                             <p class="text-xs text-slate-500">{{ $link['meta'] }}</p>
                         @endif
                         @if (! empty($link['url']))
-                            <p class="truncate text-xs text-teal-700">{{ $link['url'] }}</p>
+                            <p class="truncate text-xs text-brand-700">{{ $link['url'] }}</p>
                         @endif
                     </div>
                     @if (! empty($link['url']))
                         <a href="{{ $link['url'] }}" target="_blank" rel="noopener"
-                           class="shrink-0 rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-800">
+                           class="shrink-0 rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-800">
                             Voir
                         </a>
                     @endif
@@ -102,7 +102,7 @@
                           class="w-full rounded-xl border-slate-200 text-sm"
                           placeholder="{{ $rejectPlaceholder }}"></textarea>
                 <button type="submit"
-                        class="w-full rounded-xl bg-rose-600 py-3 text-sm font-bold text-white hover:bg-rose-700">
+                        class="w-full rounded-xl bg-cta-600 py-3 text-sm font-bold text-white hover:bg-cta-700">
                     {{ $rejectLabel }}
                 </button>
             </form>

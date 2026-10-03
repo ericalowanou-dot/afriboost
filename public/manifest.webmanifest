@@ -1,0 +1,24 @@
+{
+    "name": "AfriBoost — Missions créateurs",
+    "short_name": "AfriBoost",
+    "description": "Missions de promotion rémunérées en USD pour les créateurs de contenu.",
+    "lang": "fr",
+    "start_url": "/missions?source=pwa",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#e4f3e8",
+    "theme_color": "#1a8049",
+    "categories": ["business", "social"],
+    "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+        { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+    ],
+    "shortcuts": [
+        { "name": "Missions", "url": "/missions", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "Mes participations", "url": "/mes-participations", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "Mon wallet", "url": "/mon-wallet", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    ]
+}

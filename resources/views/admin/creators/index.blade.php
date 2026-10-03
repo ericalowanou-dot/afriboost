@@ -16,10 +16,10 @@
             @endphp
             @foreach ($verificationFilters as $key => $label)
                 <button type="submit" name="verification" value="{{ $key }}"
-                        class="rounded-full px-4 py-2 text-sm font-semibold {{ $filters['verification'] === $key ? 'bg-teal-700 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200' }}">
+                        class="rounded-full px-4 py-2 text-sm font-semibold {{ $filters['verification'] === $key ? 'bg-brand-700 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200' }}">
                     {{ $label }}
                     @if ($key === 'pending' && $pendingCount > 0)
-                        <span class="ml-1 rounded-full bg-rose-500 px-2 py-0.5 text-xs text-white">{{ $pendingCount }}</span>
+                        <span class="ml-1 rounded-full bg-cta-500 px-2 py-0.5 text-xs text-white">{{ $pendingCount }}</span>
                     @endif
                 </button>
             @endforeach
@@ -74,7 +74,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="rounded-xl bg-teal-700 px-4 py-2 text-sm font-bold text-white">Filtrer</button>
+            <button type="submit" class="rounded-xl bg-brand-700 px-4 py-2 text-sm font-bold text-white">Filtrer</button>
             @if (array_filter($filters, fn ($v) => $v !== 'all' && $v !== 'latest' && $v !== ''))
                 <a href="{{ route('admin.creators.index') }}" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">Réinitialiser</a>
             @endif
@@ -135,7 +135,7 @@
                                 :can-decide="$creator->verification_status === 'pending'"
                             />
                             <a href="{{ route('admin.creators.show', $creator) }}"
-                               class="mt-1 inline-flex text-xs font-semibold text-teal-700 hover:underline">
+                               class="mt-1 inline-flex text-xs font-semibold text-brand-700 hover:underline">
                                 Fiche complète
                             </a>
                         </td>

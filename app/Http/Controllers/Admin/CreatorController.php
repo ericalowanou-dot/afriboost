@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\Participation;
 use App\Models\SocialNetwork;
 use App\Models\User;
+use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -64,7 +67,19 @@ class CreatorController extends Controller
 
         $creator->load(['socialNetworks', 'wallet', 'participations.mission', 'verifier']);
 
-        return view('admin.creators.show', compact('creator'));
+        $activity = ActivityLog::query()
+            ->with('user')
+            ->where(function ($q) use ($creator) {
+                $q->whereMorphedTo('subject', $creator)
+                    ->orWhere(fn ($p) => $p
+                        ->where('subject_type', (new Participation)->getMorphClass())
+                        ->whereIn('subject_id', $creator->participations->pluck('id')));
+            })
+            ->latest()
+            ->limit(15)
+            ->get();
+
+        return view('admin.creators.show', compact('creator', 'activity'));
     }
 
     public function updateStatus(Request $request, User $creator)
@@ -76,7 +91,19 @@ class CreatorController extends Controller
             'status_reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        if ($data['status'] !== 'active' && blank($data['status_reason'] ?? null)) {
+            return back()->withErrors(['status_reason' => 'Indiquez la raison de la suspension ou du blocage.']);
+        }
+
+        $previous = $creator->status;
         $creator->update($data);
+
+        ActivityLogger::log(
+            'creator.status_changed',
+            'Statut de '.$creator->name.' : '.$previous.' → '.$data['status'].'.',
+            $creator,
+            ['from' => $previous, 'to' => $data['status'], 'reason' => $data['status_reason'] ?? null]
+        );
 
         return back()->with('success', 'Statut du créateur mis à jour.');
     }
@@ -91,6 +118,8 @@ class CreatorController extends Controller
             'verified_by' => auth()->id(),
             'status_reason' => null,
         ]);
+
+        ActivityLogger::log('creator.verified', 'Compte de '.$creator->name.' vérifié.', $creator);
 
         return back()->with('success', 'Compte créateur vérifié.');
     }
@@ -108,6 +137,10 @@ class CreatorController extends Controller
             'status_reason' => $data['status_reason'],
             'verified_at' => now(),
             'verified_by' => auth()->id(),
+        ]);
+
+        ActivityLogger::log('creator.rejected', 'Compte de '.$creator->name.' refusé.', $creator, [
+            'reason' => $data['status_reason'],
         ]);
 
         return back()->with('success', 'Compte créateur refusé.');

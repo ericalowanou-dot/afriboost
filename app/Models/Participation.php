@@ -5,21 +5,29 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Participation extends Model
 {
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_SUBMITTED = 'submitted';
+
     public const STATUS_UNDER_REVIEW = 'under_review';
+
     public const STATUS_VALIDATED = 'validated';
+
     public const STATUS_REJECTED = 'rejected';
+
     public const STATUS_PAID = 'paid';
 
     protected $fillable = [
         'user_id',
         'mission_id',
+        'network',
         'content_url',
         'screenshot_path',
+        'reward_usd',
         'status',
         'rejection_reason',
         'submitted_at',
@@ -32,6 +40,7 @@ class Participation extends Model
         return [
             'submitted_at' => 'datetime',
             'reviewed_at' => 'datetime',
+            'reward_usd' => 'decimal:2',
         ];
     }
 
@@ -83,6 +92,29 @@ class Participation extends Model
         };
     }
 
+    /** Réseau réellement utilisé pour la mission (repli sur le réseau principal). */
+    public function effectiveNetwork(): ?string
+    {
+        return $this->network ?: $this->mission?->social_network;
+    }
+
+    /** Montant figé à la validation, sinon montant estimé selon le classement actuel. */
+    public function rewardAmount(): float
+    {
+        if ($this->reward_usd !== null) {
+            return (float) $this->reward_usd;
+        }
+
+        return $this->mission?->rewardFor($this->user, $this->effectiveNetwork()) ?? 0.0;
+    }
+
+    public function screenshotUrl(): ?string
+    {
+        return $this->screenshot_path
+            ? Storage::disk('public')->url($this->screenshot_path)
+            : null;
+    }
+
     public function isPendingReview(): bool
     {
         return in_array($this->status, [self::STATUS_SUBMITTED, self::STATUS_UNDER_REVIEW], true);
@@ -97,7 +129,7 @@ class Participation extends Model
             $links[] = [
                 'label' => 'Contenu soumis',
                 'url' => $this->content_url,
-                'meta' => $this->mission?->networkLabel().' · '.$this->mission?->brand_name,
+                'meta' => $this->mission?->networkLabel($this->effectiveNetwork()).' · '.$this->mission?->brand_name,
             ];
         }
 
@@ -120,7 +152,7 @@ class Participation extends Model
     public function adminTierNetworks(): array
     {
         $networks = $this->user?->socialNetworks ?? collect();
-        $missionNetwork = $this->mission?->social_network;
+        $missionNetwork = $this->effectiveNetwork();
 
         if ($missionNetwork) {
             $networks = $networks->sortByDesc(fn (SocialNetwork $network) => $network->platform === $missionNetwork);

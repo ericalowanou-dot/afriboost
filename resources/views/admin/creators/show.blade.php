@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <a href="{{ route('admin.creators.index') }}" class="inline-flex text-sm font-semibold text-teal-700">← Retour à la liste</a>
+        <a href="{{ route('admin.creators.index') }}" class="inline-flex text-sm font-semibold text-brand-700">← Retour à la liste</a>
 
         <x-admin.verification-modals
             :prefix="'creator-show-'.$creator->id"
@@ -26,7 +26,7 @@
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
-        <section class="rounded-2xl bg-white p-5 shadow-sm">
+        <section class="ab-panel p-5">
             <h2 class="text-lg font-bold">Informations du compte</h2>
             <dl class="mt-4 space-y-3 text-sm">
                 <div class="flex justify-between gap-4 border-b border-slate-100 pb-2">
@@ -60,7 +60,7 @@
                 </div>
                 <div class="flex justify-between gap-4 border-b border-slate-100 pb-2">
                     <dt class="text-slate-500">Solde wallet</dt>
-                    <dd class="font-semibold">{{ number_format(optional($creator->wallet)->balance_usd ?? 0, 2) }} USD</dd>
+                    <dd class="font-semibold">{{ \App\Support\Money::usd(optional($creator->wallet)->balance_usd ?? 0) }}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
                     <dt class="text-slate-500">Participations</dt>
@@ -76,7 +76,7 @@
         </section>
 
         <section class="space-y-4">
-            <div class="rounded-2xl bg-white p-5 shadow-sm">
+            <div class="ab-panel p-5">
                 <h2 class="text-lg font-bold">Classement global manuel</h2>
                 <p class="mt-1 text-sm text-slate-500">Raccourci si tous les comptes ont le même niveau.</p>
 
@@ -93,7 +93,7 @@
                 </form>
             </div>
 
-            <div class="rounded-2xl bg-white p-5 shadow-sm">
+            <div class="ab-panel p-5">
                 <h2 class="text-lg font-bold">Statut du compte</h2>
                 <form method="POST" action="{{ route('admin.creators.status', $creator) }}" class="mt-4 flex flex-wrap items-end gap-2">
                     @csrf
@@ -111,7 +111,7 @@
         </section>
     </div>
 
-    <section class="mt-6 rounded-2xl bg-white p-5 shadow-sm">
+    <section class="mt-6 ab-panel p-5">
         <h2 class="text-lg font-bold">Réseaux sociaux</h2>
         <p class="mt-1 text-sm text-slate-500">Utilisez le bouton « Classer » en haut pour catégoriser chaque compte (Top, Medium, Basique).</p>
 
@@ -121,17 +121,17 @@
                     <div>
                         <p class="font-bold">{{ $network->platformLabel() }}</p>
                         <p class="text-sm text-slate-500">{{ $network->handle ?? '—' }}</p>
-                        <p class="text-xs text-teal-700">{{ $network->tierLabel() }}</p>
+                        <p class="text-xs text-brand-700">{{ $network->tierLabel() }}</p>
                         @if ($network->profile_url)
                             <a href="{{ $network->profile_url }}" target="_blank" rel="noopener"
-                               class="mt-1 inline-block text-sm font-semibold text-teal-700 break-all">
+                               class="mt-1 inline-block text-sm font-semibold text-brand-700 break-all">
                                 {{ $network->profile_url }}
                             </a>
                         @endif
                     </div>
                     @if ($network->profile_url)
                         <a href="{{ $network->profile_url }}" target="_blank" rel="noopener"
-                           class="rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-bold text-white">
+                           class="rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-bold text-white">
                             Voir le profil
                         </a>
                     @endif
@@ -168,17 +168,42 @@
         @endforelse
     </section>
 
-    @if ($creator->participations->isNotEmpty())
-        <section class="mt-6 rounded-2xl bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-bold">Participations récentes</h2>
+    <div class="mt-6 grid gap-6 xl:grid-cols-2">
+        <section class="ab-panel p-5">
+            <h2 class="text-lg font-bold">Missions réalisées</h2>
             <ul class="mt-3 divide-y divide-slate-100 text-sm">
-                @foreach ($creator->participations->take(10) as $participation)
-                    <li class="flex justify-between gap-4 py-2">
-                        <span>{{ $participation->mission->brand_name ?? 'Mission #'.$participation->mission_id }}</span>
-                        <span class="font-semibold">{{ $participation->statusLabel() }}</span>
+                @forelse ($creator->participations->sortByDesc('updated_at')->take(15) as $participation)
+                    <li class="flex items-center justify-between gap-4 py-2.5">
+                        <a href="{{ route('admin.participations.show', $participation) }}" class="flex min-w-0 items-center gap-2 hover:text-brand-700">
+                            <x-network-icon :network="$participation->effectiveNetwork()" />
+                            <span class="truncate">{{ $participation->mission->brand_name ?? 'Mission #'.$participation->mission_id }}</span>
+                        </a>
+                        <span class="ab-chip {{ $participation->statusColor() }}">{{ $participation->statusLabel() }}</span>
                     </li>
-                @endforeach
+                @empty
+                    <li class="py-6 text-center text-slate-500">Aucune participation.</li>
+                @endforelse
             </ul>
         </section>
-    @endif
+
+        <section class="ab-panel p-5">
+            <h2 class="text-lg font-bold">Historique des validations</h2>
+            <ol class="mt-3 space-y-3">
+                @forelse ($activity as $log)
+                    <li class="flex gap-3 text-sm">
+                        <span class="ab-chip h-fit font-mono {{ $log->tone() }}">{{ \Illuminate\Support\Str::after($log->action, '.') }}</span>
+                        <div class="min-w-0">
+                            <p class="text-slate-700">{{ $log->description }}</p>
+                            @if (! empty($log->properties['reason']))
+                                <p class="text-xs text-slate-500">Motif : {{ $log->properties['reason'] }}</p>
+                            @endif
+                            <p class="text-xs text-slate-400">{{ $log->user?->name ?? 'Système' }} · {{ $log->created_at->format('d/m/Y H:i') }}</p>
+                        </div>
+                    </li>
+                @empty
+                    <li class="py-6 text-center text-sm text-slate-500">Aucune action enregistrée.</li>
+                @endforelse
+            </ol>
+        </section>
+    </div>
 @endsection

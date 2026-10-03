@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Participation;
 use App\Models\SocialNetwork;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -11,9 +12,17 @@ class CreatorProfileController extends Controller
 {
     public function show(): View
     {
-        $user = auth()->user()->load('socialNetworks');
+        $user = auth()->user()->load(['socialNetworks', 'wallet']);
 
-        return view('creator.profile.show', compact('user'));
+        $stats = [
+            'participations' => $user->participations()->count(),
+            'validated' => $user->participations()
+                ->whereIn('status', [Participation::STATUS_VALIDATED, Participation::STATUS_PAID])
+                ->count(),
+            'earned' => $user->wallet?->totalEarned() ?? 0,
+        ];
+
+        return view('creator.profile.show', compact('user', 'stats'));
     }
 
     public function update(Request $request)

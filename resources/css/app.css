@@ -3,15 +3,72 @@
 @tailwind utilities;
 
 @layer base {
-    :root {
-        --ab-teal: #0f766e;
-        --ab-rose: #e11d48;
-        --ab-mint: #ccfbf1;
-        --ab-peach: #ffedd5;
+    html {
+        -webkit-tap-highlight-color: transparent;
     }
 
     body {
         font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    /* Cartes blanches arrondies de la maquette */
+    .ab-card {
+        @apply rounded-3xl bg-white shadow-card ring-1 ring-slate-900/5;
+    }
+
+    .ab-input {
+        @apply w-full rounded-2xl border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:ring-brand-500;
+    }
+
+    .ab-label {
+        @apply mb-1.5 block text-sm font-semibold text-slate-700;
+    }
+
+    .ab-btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .ab-btn-cta {
+        @apply ab-btn bg-cta-600 text-white shadow-cta hover:bg-cta-700;
+    }
+
+    .ab-btn-brand {
+        @apply ab-btn bg-brand-600 text-white hover:bg-brand-700;
+    }
+
+    .ab-btn-ghost {
+        @apply ab-btn bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50;
+    }
+
+    .ab-chip {
+        @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold;
+    }
+
+    .ab-tab {
+        @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:text-slate-900;
+    }
+
+    .ab-tab-active {
+        @apply bg-white/80 text-brand-700 shadow-sm ring-1 ring-brand-600/10;
+    }
+
+    /* Admin */
+    .ab-panel {
+        @apply rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5;
+    }
+
+    .ab-th {
+        @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+
+    .ab-td {
+        @apply px-4 py-3 align-middle;
     }
 }
 
@@ -20,10 +77,25 @@
         font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     }
 
+    /* Dégradé menthe → crème de la maquette */
     .bg-afriboost {
-        background:
-            radial-gradient(circle at top left, rgba(204, 251, 241, 0.9), transparent 40%),
-            radial-gradient(circle at top right, rgba(255, 237, 213, 0.85), transparent 35%),
-            linear-gradient(180deg, #f0fdfa 0%, #fff7ed 45%, #f0fdfa 100%);
+        background-color: #e4f3e8;
+        background-image:
+            radial-gradient(120% 60% at 0% 0%, #bfe9dc 0%, transparent 60%),
+            radial-gradient(100% 60% at 100% 40%, #f7eebf 0%, transparent 65%),
+            linear-gradient(180deg, #c9ecdf 0%, #eef0cf 55%, #f5ecc4 100%);
+        background-attachment: fixed;
+    }
+
+    .scrollbar-none {
+        scrollbar-width: none;
+    }
+
+    .scrollbar-none::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pb-safe {
+        padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
     }
 }

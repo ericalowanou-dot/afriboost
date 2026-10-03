@@ -8,31 +8,35 @@ use Illuminate\View\View;
 
 class ParticipationController extends Controller
 {
+    /** Onglets de la page « Mes participations » et statuts couverts par chacun. */
+    public const TABS = [
+        'in_progress' => [Participation::STATUS_IN_PROGRESS],
+        'submitted' => [Participation::STATUS_SUBMITTED, Participation::STATUS_UNDER_REVIEW],
+        'validated' => [Participation::STATUS_VALIDATED, Participation::STATUS_PAID],
+        'rejected' => [Participation::STATUS_REJECTED],
+    ];
+
     public function index(Request $request): View
     {
         $status = $request->string('status')->toString();
+        $status = array_key_exists($status, self::TABS) ? $status : '';
 
-        $statusMap = [
-            'in_progress' => Participation::STATUS_IN_PROGRESS,
-            'submitted' => [Participation::STATUS_SUBMITTED, Participation::STATUS_UNDER_REVIEW],
-            'validated' => [Participation::STATUS_VALIDATED, Participation::STATUS_PAID],
-            'rejected' => Participation::STATUS_REJECTED,
-        ];
+        $user = auth()->user()->loadMissing('socialNetworks');
 
-        $query = auth()->user()
-            ->participations()
+        $all = $user->participations()
             ->with('mission')
-            ->latest();
+            ->latest('updated_at')
+            ->get()
+            ->each(fn (Participation $participation) => $participation->setRelation('user', $user));
 
-        if ($status && isset($statusMap[$status])) {
-            $filter = $statusMap[$status];
-            is_array($filter)
-                ? $query->whereIn('status', $filter)
-                : $query->where('status', $filter);
-        }
+        $counts = collect(self::TABS)->map(
+            fn (array $statuses) => $all->whereIn('status', $statuses)->count()
+        );
 
-        $participations = $query->get();
+        $participations = $status
+            ? $all->whereIn('status', self::TABS[$status])->values()
+            : $all;
 
-        return view('creator.participations.index', compact('participations', 'status'));
+        return view('creator.participations.index', compact('participations', 'status', 'counts'));
     }
 }

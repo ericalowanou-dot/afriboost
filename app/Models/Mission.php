@@ -162,6 +162,82 @@ class Mission extends Model
         };
     }
 
+    /** Plus petite et plus grande récompense proposées, tous réseaux et niveaux confondus. */
+    public function rewardRange(): array
+    {
+        $amounts = collect($this->network_budgets ?: [])
+            ->flatMap(fn ($tiers) => array_values((array) $tiers))
+            ->push($this->reward_usd, $this->reward_usd_medium, $this->reward_usd_top)
+            ->filter(fn ($amount) => $amount !== null)
+            ->map(fn ($amount) => (float) $amount);
+
+        return [$amounts->min() ?? 0.0, $amounts->max() ?? 0.0];
+    }
+
+    public function contentTypeLabel(): string
+    {
+        return match ($this->content_type) {
+            'video' => 'Vidéo',
+            'post' => 'Publication',
+            'story' => 'Story',
+            default => ucfirst((string) $this->content_type),
+        };
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'draft' => 'Brouillon',
+            'published' => 'Publiée',
+            'closed' => 'Clôturée',
+            default => ucfirst((string) $this->status),
+        };
+    }
+
+    public function hasEnded(): bool
+    {
+        return $this->ends_at !== null && $this->ends_at->copy()->endOfDay()->isPast();
+    }
+
+    public function hasStarted(): bool
+    {
+        return $this->starts_at === null || $this->starts_at->copy()->startOfDay()->lte(now());
+    }
+
+    /** Nombre de places prises (toutes participations sauf refusées). */
+    public function takenSlots(): int
+    {
+        return $this->participations()
+            ->where('status', '!=', Participation::STATUS_REJECTED)
+            ->count();
+    }
+
+    public function remainingSlots(): ?int
+    {
+        if (! $this->max_participants) {
+            return null;
+        }
+
+        return max(0, $this->max_participants - $this->takenSlots());
+    }
+
+    public function isFull(): bool
+    {
+        return $this->remainingSlots() === 0;
+    }
+
+    /** Raison pour laquelle on ne peut plus rejoindre la mission, ou null si elle est ouverte. */
+    public function closedReason(): ?string
+    {
+        return match (true) {
+            $this->status !== 'published' => 'Cette mission n\'est plus disponible.',
+            ! $this->hasStarted() => 'Cette mission démarre le '.$this->starts_at->format('d/m/Y').'.',
+            $this->hasEnded() => 'Cette mission est terminée.',
+            $this->isFull() => 'Toutes les places de cette mission sont prises.',
+            default => null,
+        };
+    }
+
     /** Slug lisible style CoinAfrique : titre-id */
     public function urlSlug(): string
     {

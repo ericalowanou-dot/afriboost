@@ -50,12 +50,13 @@
         @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold;
     }
 
+    /* Onglets posés sur le fond sombre */
     .ab-tab {
-        @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:text-slate-900;
+        @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-white/70 ring-1 ring-white/15 transition hover:bg-white/10 hover:text-white;
     }
 
     .ab-tab-active {
-        @apply bg-white/80 text-brand-700 shadow-sm ring-1 ring-brand-600/10;
+        @apply bg-white text-brand-700 shadow-sm ring-white hover:bg-white hover:text-brand-700;
     }
 
     /* Admin */
@@ -77,13 +78,13 @@
         font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     }
 
-    /* Dégradé menthe → crème de la maquette */
+    /* Dégradé teal profond de la maquette */
     .bg-afriboost {
-        background-color: #e4f3e8;
+        background-color: #133b3e;
         background-image:
-            radial-gradient(120% 60% at 0% 0%, #bfe9dc 0%, transparent 60%),
-            radial-gradient(100% 60% at 100% 40%, #f7eebf 0%, transparent 65%),
-            linear-gradient(180deg, #c9ecdf 0%, #eef0cf 55%, #f5ecc4 100%);
+            radial-gradient(90% 45% at 100% 0%, rgb(56 132 124 / 0.55) 0%, transparent 70%),
+            radial-gradient(80% 50% at 0% 55%, rgb(39 156 92 / 0.18) 0%, transparent 70%),
+            linear-gradient(180deg, #1b4a4c 0%, #143c3f 45%, #0f2f33 100%);
         background-attachment: fixed;
     }
 

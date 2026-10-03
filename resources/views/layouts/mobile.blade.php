@@ -14,45 +14,62 @@
 @php
     $authUser = auth()->user();
     $navItems = [
-        ['missions.*', 'missions.index', 'flag', 'Missions'],
+        ['missions.*', 'missions.index', 'home', 'Accueil'],
         ['participations.*', 'participations.index', 'clipboard-check', 'Activité'],
         ['wallet.*', 'wallet.index', 'wallet', 'Wallet'],
         ['creator.*', 'creator.profile', 'user', 'Profil'],
     ];
 @endphp
 <body class="font-afriboost bg-afriboost text-slate-900 antialiased" x-data="{ drawer: false }" @keydown.escape.window="drawer = false">
+    @php
+        // Point rouge de la cloche : une participation attend une action du créateur.
+        $needsAttention = $authUser && ! $authUser->isAdmin()
+            && $authUser->participations()->whereIn('status', ['in_progress', 'rejected'])->exists();
+    @endphp
     <div class="min-h-screen {{ $authUser && ! $authUser->isAdmin() ? 'pb-28' : 'pb-24' }}">
-        {{-- Barre supérieure : menu, logo, avatar --}}
+        {{-- Barre supérieure : avatar + salutation, notifications --}}
         <header class="sticky top-0 z-30 transition-colors" x-data="{ scrolled: false }" @scroll.window="scrolled = window.scrollY > 8"
-                :class="scrolled ? 'bg-[#d4efe2]/85 shadow-sm backdrop-blur-md' : 'bg-transparent'">
-            <div class="mx-auto flex max-w-lg items-center justify-between px-4 pb-2 pt-3">
-                <button type="button" @click="drawer = true" class="-ml-2 rounded-xl p-2 text-slate-800 hover:bg-white/50" aria-label="Ouvrir le menu">
-                    <x-icon name="menu" class="h-6 w-6" stroke="2.2" />
+                :class="scrolled ? 'bg-[#123b3d]/85 shadow-lg shadow-black/10 backdrop-blur-md' : 'bg-transparent'">
+            <div class="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 pb-3 pt-4">
+                <button type="button" @click="drawer = true" class="flex min-w-0 items-center gap-3 rounded-2xl text-left" aria-label="Ouvrir le menu">
+                    @auth
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-base font-extrabold text-white ring-2 ring-brand-400/70 ring-offset-2 ring-offset-[#174447]">
+                            {{ mb_strtoupper(mb_substr($authUser->name, 0, 1)) }}
+                        </span>
+                        <span class="min-w-0 leading-tight">
+                            <span class="block text-xs font-medium text-white/60">Bonjour,</span>
+                            <span class="block truncate text-[15px] font-extrabold text-white">{{ \Illuminate\Support\Str::of($authUser->name)->before(' ') }}</span>
+                        </span>
+                    @else
+                        <x-logo class="scale-90" light />
+                    @endauth
                 </button>
-                <a href="{{ route('missions.index') }}" aria-label="Accueil AfriBoost">
-                    <x-logo class="scale-90" />
-                </a>
                 @auth
-                    <a href="{{ $authUser->isAdmin() ? route('admin.dashboard') : route('creator.profile') }}"
-                       class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-extrabold text-white shadow-md ring-2 ring-white"
-                       aria-label="Mon profil">
-                        {{ mb_strtoupper(mb_substr($authUser->name, 0, 1)) }}
+                    <a href="{{ $authUser->isAdmin() ? route('admin.dashboard') : route('participations.index') }}"
+                       class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md transition hover:bg-white"
+                       aria-label="{{ $needsAttention ? 'Participations à traiter' : 'Mes participations' }}">
+                        <x-icon name="bell" class="h-5 w-5" stroke="2" />
+                        @if ($needsAttention)
+                            <span class="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-cta-500 ring-2 ring-white"></span>
+                        @endif
                     </a>
                 @else
-                    <a href="{{ route('login') }}" class="rounded-full bg-white/80 px-3 py-2 text-xs font-bold text-brand-700 shadow-sm">Connexion</a>
+                    <a href="{{ route('login') }}" class="rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-brand-700 shadow-sm">Connexion</a>
                 @endauth
             </div>
         </header>
 
         <main class="mx-auto max-w-lg px-4">
-            <div class="mb-4 mt-1 flex items-center gap-2">
-                @hasSection('back')
-                    <a href="@yield('back')" class="-ml-1 rounded-xl p-1.5 text-slate-800 hover:bg-white/50" aria-label="Retour">
-                        <x-icon name="arrow-left" class="h-6 w-6" stroke="2.2" />
-                    </a>
-                @endif
-                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">@yield('heading', 'Missions')</h1>
-            </div>
+            @unless (View::hasSection('hide_heading'))
+                <div class="mb-4 mt-1 flex items-center gap-2">
+                    @hasSection('back')
+                        <a href="@yield('back')" class="-ml-1 rounded-xl p-1.5 text-white hover:bg-white/10" aria-label="Retour">
+                            <x-icon name="arrow-left" class="h-6 w-6" stroke="2.2" />
+                        </a>
+                    @endif
+                    <h1 class="text-2xl font-extrabold tracking-tight text-white">@yield('heading', 'Missions')</h1>
+                </div>
+            @endunless
 
             <x-flash class="mb-4" />
 
@@ -62,15 +79,15 @@
         {{-- Navigation basse persistante (cahier des charges §6) --}}
         @auth
             @unless ($authUser->isAdmin())
-                <nav class="fixed inset-x-0 bottom-0 z-40 px-3 pb-safe" aria-label="Navigation principale">
-                    <div class="mx-auto grid max-w-lg grid-cols-4 rounded-3xl border-2 border-dashed border-cta-400/40 bg-white/95 p-1.5 shadow-nav backdrop-blur">
+                <nav class="fixed inset-x-0 bottom-0 z-40 px-4 pb-safe" aria-label="Navigation principale">
+                    <div class="mx-auto flex max-w-lg items-center justify-between rounded-full bg-white p-1.5 shadow-nav ring-1 ring-black/5">
                         @foreach ($navItems as [$pattern, $route, $icon, $label])
                             @php $active = request()->routeIs($pattern); @endphp
                             <a href="{{ route($route) }}"
-                               class="flex flex-col items-center gap-1 rounded-2xl py-2 text-[11px] font-bold transition {{ $active ? 'bg-brand-50 text-brand-600' : 'text-slate-600 hover:text-slate-900' }}"
-                               @if ($active) aria-current="page" @endif>
-                                <x-icon :name="$icon" class="h-6 w-6" :stroke="$active ? 2.2 : 1.9" />
-                                {{ $label }}
+                               class="flex items-center justify-center gap-2 rounded-full transition-all duration-300 {{ $active ? 'bg-brand-600 px-5 py-3 text-sm font-extrabold text-white shadow-md shadow-brand-700/30' : 'flex-1 py-3 text-slate-500 hover:text-slate-900' }}"
+                               @if ($active) aria-current="page" @else aria-label="{{ $label }}" @endif>
+                                <x-icon :name="$icon" class="h-[22px] w-[22px]" :stroke="$active ? 2.2 : 1.9" />
+                                @if ($active)<span>{{ $label }}</span>@endif
                             </a>
                         @endforeach
                     </div>
@@ -122,7 +139,7 @@
                     @foreach ($navItems as [$pattern, $route, $icon, $label])
                         <a href="{{ route($route) }}" class="flex items-center gap-3 rounded-xl px-3 py-3 {{ request()->routeIs($pattern) ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-50' }}">
                             <x-icon :name="$icon" class="{{ request()->routeIs($pattern) ? 'text-brand-600' : 'text-slate-400' }}" />
-                            {{ $label === 'Activité' ? 'Mes participations' : ($label === 'Wallet' ? 'Mon wallet' : ($label === 'Profil' ? 'Mon profil' : $label)) }}
+                            {{ ['Accueil' => 'Missions', 'Activité' => 'Mes participations', 'Wallet' => 'Mon wallet', 'Profil' => 'Mon profil'][$label] ?? $label }}
                         </a>
                     @endforeach
                 @else

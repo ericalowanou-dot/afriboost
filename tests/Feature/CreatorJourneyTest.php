@@ -50,7 +50,7 @@ class CreatorJourneyTest extends TestCase
         $user = $this->creator();
         $mission = $this->mission();
 
-        $this->get(route('missions.index'))->assertOk()->assertSee('GOZEM')->assertSee('Lancez aussi votre');
+        $this->get(route('missions.index'))->assertOk()->assertSee('GOZEM')->assertSee('Publie')->assertSee('Lancez votre');
         $this->get(route('missions.show', $mission->routeParams()))->assertOk()->assertSee('À propos de la mission')->assertSee('Se connecter');
 
         $this->actingAs($user);

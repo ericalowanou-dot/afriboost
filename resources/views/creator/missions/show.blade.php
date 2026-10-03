@@ -37,11 +37,11 @@
     {{-- Choix du réseau pour les missions multi-réseaux --}}
     @if (count($mission->selectedNetworks()) > 1 && ! $participation)
         <div class="mt-3">
-            <p class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Choisis ton réseau</p>
+            <p class="mb-2 text-xs font-bold uppercase tracking-wide text-white/60">Choisis ton réseau</p>
             <div class="grid grid-cols-2 gap-2">
                 @foreach ($mission->selectedNetworks() as $n)
                     <a href="{{ route('missions.show', $mission->routeParams($n)) }}"
-                       class="flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-bold ring-1 transition {{ $n === $reseau ? 'bg-white text-slate-900 ring-2 ring-brand-500' : 'bg-white/60 text-slate-600 ring-slate-200 hover:bg-white' }}">
+                       class="flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-bold ring-1 transition {{ $n === $reseau ? 'bg-white text-slate-900 ring-2 ring-brand-500' : 'bg-white/80 text-slate-700 ring-white/0 hover:bg-white' }}">
                         <span class="flex items-center gap-2"><x-network-icon :network="$n" /> {{ $mission->networkLabel($n) }}</span>
                         <span class="text-cta-600">{{ Money::usd($mission->rewardFor($user, $n)) }}</span>
                     </a>

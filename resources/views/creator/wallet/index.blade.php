@@ -39,7 +39,7 @@
         <a href="{{ route('wallet.index', $showAll ? [] : ['tout' => 1]) }}#transactions" class="ab-card flex items-center justify-center gap-2 px-3 py-3.5 text-sm font-bold text-slate-800">
             <x-icon name="history" class="h-[18px] w-[18px]" /> {{ $showAll ? 'Récentes' : 'Historique' }}
         </a>
-        <button type="button" @click="payout = true" class="ab-card flex items-center justify-center gap-2 px-3 py-3.5 text-sm font-bold text-slate-800 disabled:opacity-50"
+        <button type="button" @click="payout = true" class="ab-card flex items-center justify-center gap-2 px-3 py-3.5 text-sm font-bold text-slate-800 disabled:cursor-not-allowed disabled:text-slate-400"
                 @disabled($hasPendingPayout)>
             <x-icon name="download" class="h-[18px] w-[18px]" /> Demander un retrait
         </button>
